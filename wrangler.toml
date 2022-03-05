@@ -7,6 +7,9 @@ route = ""
 zone_id = ""
 compatibility_date = "2022-03-04"
 
+[miniflare]
+durable_objects_persist = true
+
 [build]
 command = "npm install && npm test && npm run build"
 [build.upload]

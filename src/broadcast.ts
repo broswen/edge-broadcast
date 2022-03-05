@@ -2,8 +2,12 @@ export class BroadcastTs {
   state: DurableObjectState
   sessions: WebSocket[]
   constructor(state: DurableObjectState, env: Env) {
-    this.state = state;
-    this.sessions = [];
+    this.state = state
+    this.sessions = []
+    state.blockConcurrencyWhile(async () => {
+      this.sessions = await state.storage?.get('websockets') ?? []
+      console.log('restored sessions', this.sessions)
+    })
   }
 
   // Handle HTTP requests from clients.
@@ -12,7 +16,7 @@ export class BroadcastTs {
     if (request.method === 'POST') {
       //  sending broadcast message
       const message = await request.text();
-      this.broadcast(message)
+      await this.broadcast(message)
       return new Response(JSON.stringify({status: 'received'}))
     }
     //  connecting websocket
@@ -20,6 +24,7 @@ export class BroadcastTs {
     const [client, server] = Object.values(webSocketPair)
     server.accept()
     this.sessions.push(server)
+    await this.state.storage?.put("websockets", this.sessions);
     server.addEventListener('message', async (message) => {
       try {
         console.log(JSON.parse(String(message.data)))
@@ -29,10 +34,9 @@ export class BroadcastTs {
     })
 
     return new Response(null, {status: 101, webSocket: client})
-    // await this.state.storage?.put("value", value);
   }
 
-  broadcast(message: string) {
+  async broadcast(message: string) {
     console.log('broadcasting:', message)
     this.sessions = this.sessions.filter(session => {
       try {
@@ -43,6 +47,7 @@ export class BroadcastTs {
       }
       return true
     })
+    await this.state.storage?.put("websockets", this.sessions);
   }
 }
 
