@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Listener</title>
+
+</head>
+<body>
+<h1>Listening for Broadcasts...</h1>
+<h3>Last Updated</h3>
+<div id="lastUpdated"></div>
+<h3>Broadcasts</h3>
+<div id="broadcasts"></div>
+<script>
+    console.log('starting listener...')
+    const lastUpdated = document.getElementById('lastUpdated');
+    const broadcasts = document.getElementById('broadcasts');
+    const proto = window.location.protocol === 'https:' ? 'wss://' : 'ws://'
+    const uri =  `${proto}${window.location.host}/listen`
+    console.log('connecting websocket to', uri)
+    const ws = new WebSocket(uri)
+
+    ws.addEventListener('message', (message) => {
+        const data = JSON.parse(message.data)
+        const time = new Date(data.timestamp)
+        lastUpdated.innerHTML = time.toLocaleString()
+        broadcasts.innerHTML = `<div>${time.toISOString()} ${data.message}</div>` + broadcasts.innerHTML
+    })
+
+</script>
+</body>
+</html>
