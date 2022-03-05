@@ -25,7 +25,15 @@
         const time = new Date(data.timestamp)
         lastUpdated.innerHTML = time.toLocaleString()
         broadcasts.innerHTML = `<div>${time.toISOString()} ${data.message}</div>` + broadcasts.innerHTML
+
+        if (Notification.permission === 'granted') {
+            new Notification('Broadcast!', {body: data.message})
+        }
     })
+
+    if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(data => console.log(data))
+    }
 
 </script>
 </body>
